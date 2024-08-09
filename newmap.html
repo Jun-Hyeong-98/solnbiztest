@@ -1,0 +1,69 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <meta charset="UTF-8" />
+    <meta
+      name="viewport"
+      content="width=device-width, initial-scale=1.0, maximum-scale=1.0, minimum-scale=1.0, user-scalable=no"
+    />
+    <title>Sysmex_dev</title>
+    <script src="https://openapi.map.naver.com/openapi/v3/maps.js?ncpClientId=9etwyax3zf"></script>
+    <style>
+      #map {
+        width: 100vw;
+        height: 100vh;
+      }
+    </style>
+  </head>
+  <body>
+    <div id="map"></div>
+    <script>
+      var map, locationMarker;
+
+      function initializeMap() {
+        var mapOptions = {
+          center: new naver.maps.LatLng(37.3595704, 127.105399),
+          zoom: 16,
+        };
+
+        map = new naver.maps.Map("map", mapOptions);
+
+        if (navigator.geolocation) {
+          navigator.geolocation.watchPosition(
+            function (position) {
+              var lat = position.coords.latitude;
+              var lng = position.coords.longitude;
+
+              var currentPosition = new naver.maps.LatLng(lat, lng);
+
+              map.setCenter(currentPosition);
+
+              if (locationMarker) {
+                locationMarker.setPosition(currentPosition);
+              } else {
+                locationMarker = new naver.maps.Marker({
+                  position: currentPosition,
+                  map: map,
+                  icon: {
+                    content: `<div style="background-color: rgba(0, 0, 255, 1); border: 2px solid #ffffff; border-radius: 50%; width: 10px; height: 10px;"></div>`,
+                    anchor: new naver.maps.Point(10, 10),
+                  },
+                });
+              }
+            },
+            function (error) {
+              console.error("오류발생");
+            },
+            {
+              enableHighAccuracy: true,
+              maximumAge: 0,
+              timeout: 5000,
+            }
+          );
+        }
+      }
+
+      initializeMap();
+    </script>
+  </body>
+</html>
