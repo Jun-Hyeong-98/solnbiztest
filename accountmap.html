@@ -1,141 +1,164 @@
-<!DOCTYPE html>
 <html>
-<head>
-  <meta charset="UTF-8" />
-  <meta http-equiv="X-UA-Compatible" content="IE=edge" />
-  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, minimum-scale=1.0, user-scalable=no" />
-  <meta http-equiv="Content-Security-Policy" content="upgrade-insecure-requests" />
-  <title>거래처지도</title>
-  <script type="text/javascript" src="https://oapi.map.naver.com/openapi/v3/maps.js?ncpClientId=9etwyax3zf"></script>
-  <script src="https://ajax.googleapis.com/ajax/libs/jquery/1.11.1/jquery.min.js"></script>
+  <head>
+    <meta charset="UTF-8" />
+    <meta http-equiv="X-UA-Compatible" content="IE=edge" />
+    <meta
+      name="viewport"
+      content="width=device-width, initial-scale=1.0, maximum-scale=1.0, minimum-scale=1.0, user-scalable=no"
+    />
+    <meta
+      http-equiv="Content-Security-Policy"
+      content="upgrade-insecure-requests"
+    />
+    <title>거래처지도</title>
+    <script
+      type="text/javascript"
+      src="https://oapi.map.naver.com/openapi/v3/maps.js?ncpClientId=9etwyax3zf"
+    ></script>
+    <script src="https://ajax.googleapis.com/ajax/libs/jquery/1.11.1/jquery.min.js"></script>
 
-  <style type="text/css">
-    html, body {
-      height: 100%;
-      margin: 0;
-      padding: 0;
-    }
-    #map {
-      width: 100%;
-      height: 100%;
-    }
-  </style>
-  <script type="text/javascript">
-    var map;
-
-    function initMap(lat, lng) {
-      var mapOptions = {
-        center: new naver.maps.LatLng(lat, lng),
-        zoom: 18,
-      };
-      map = new naver.maps.Map("map", mapOptions);
-
-      var marker = new naver.maps.Marker({
-        position: new naver.maps.LatLng(lat, lng),
-        map: map,
-      });
-    }
-
-    window.onload = function () {
-      getDataParam();
-
-      var address = addressConstruct;
-      address = address.replace(/\n/g, " ").replace(/\s+/, " ").trim();
-
-      $.ajax({
-        crossDomain: true,
-        type: "GET",
-        dataType: "json",
-        url: "http://183.111.79.113:3000/geocode", // 프록시 서버를 통한 요청
-        data: {
-          query: address,
-        },
-        success: function (response) {
-          if (response.addresses.length > 0) {
-            var location = response.addresses[0];
-            var lat = location.y;
-            var lng = location.x;
-
-            initMap(lat, lng);
-          } else {
-            alert("해당 주소를 찾을 수 없습니다.");
-          }
-        },
-        error: function (error) {
-          console.error("Geocoding API 요청 실패: ", error);
-        },
-      });
-    };
-
-    var addressConstruct = "";
-
-    function getDataParam() {
-      var vals = new Array();
-      if (location.search != "") {
-        vals = location.search.substr(1).split("&");
-        for (var i in vals) {
-          vals[i] = vals[i].replace(/\+/g, " ").split("=");
-        }
-        var found = false;
-        for (var i in vals) {
-          if (vals[i][0].toLowerCase() == "data") {
-            parseDataValue(vals[i][1]);
-            found = true;
-            break;
-          }
-        }
-        if (!found) {
-          noParams();
-        }
-      } else {
-        noParams();
+    <style type="text/css">
+      html,
+      body {
+        height: 100%;
+        margin: 0;
+        padding: 0;
       }
-    }
+      #map {
+        width: 100%;
+        height: 100%;
+      }
+    </style>
+    <script type="text/javascript">
+      var map;
 
-    function parseDataValue(datavalue) {
-      if (datavalue != "") {
-        var stateOrProvince = getXrmAttribute("address1_stateorprovince");
-        var city = getXrmAttribute("address1_city");
-        var line1 = getXrmAttribute("address1_line1");
-        var line2 = getXrmAttribute("address2_line1");
+      function initMap(lat, lng) {
+        var mapOptions = {
+          center: new naver.maps.LatLng(lat, lng),
+          zoom: 18,
+        };
+        map = new naver.maps.Map("map", mapOptions);
 
-        if (stateOrProvince && city) {
-          addressConstruct = stateOrProvince + " " + city;
-          if (line1) {
-            addressConstruct += " " + line1;
-          } else if (line2) {
-            addressConstruct += " " + line2;
+        var marker = new naver.maps.Marker({
+          position: new naver.maps.LatLng(lat, lng),
+          map: map,
+        });
+      }
+
+      window.onload = function () {
+        getDataParam();
+
+        var address = addressConstruct;
+        address = address.replace(/\n/g, " ").replace(/\s+/, " ").trim();
+
+        $.ajax({
+          crossDomain: true,
+          type: "GET",
+          dataType: "json",
+          url: "https://naveropenapi.apigw.ntruss.com/map-geocode/v2/geocode",
+          headers: {
+            "X-NCP-APIGW-API-KEY-ID": "9etwyax3zf",
+            "X-NCP-APIGW-API-KEY": "SqJI7W2rWTEtezVRYMVyBzwOxAaVaXbM2yCkDOvQ",
+          },
+          data: {
+            query: address,
+          },
+          success: function (response) {
+            if (response.addresses.length > 0) {
+              var location = response.addresses[0];
+              var lat = location.y;
+              var lng = location.x;
+
+              initMap(lat, lng);
+            } else {
+              console.log("주소못찾았어요.");
+            }
+          },
+          error: function (error) {
+            console.error("Geocoding 요청 실패: ", error);
+          },
+        });
+      };
+
+      // CRM에서 데이터를 가져와 주소를 구성
+      var addressConstruct = "";
+
+      function getDataParam() {
+        //Get the any query string parameters and load them into the vals array
+        var vals = new Array();
+        if (location.search != "") {
+          vals = location.search.substr(1).split("&");
+          for (var i in vals) {
+            vals[i] = vals[i].replace(/\+/g, " ").split("=");
+          }
+          //look for the parameter named 'data'
+          var found = false;
+          for (var i in vals) {
+            if (vals[i][0].toLowerCase() == "data") {
+              parseDataValue(vals[i][1]);
+              found = true;
+              break;
+            }
+          }
+          if (!found) {
+            noParams();
           }
         } else {
           noParams();
         }
       }
-    }
 
-    function get_type(thing) {
-      if (thing === null) return "[object Null]";
-      return Object.prototype.toString.call(thing);
-    }
+      function parseDataValue(datavalue) {
+        if (datavalue != "") {
+          var stateOrProvince = getXrmAttribute("address1_stateorprovince");
+          var city = getXrmAttribute("address1_city");
+          var line1 = getXrmAttribute("address1_line1");
+          var line2 = getXrmAttribute("address2_line1");
 
-    function getXrmAttribute(name) {
-      if (window.parent.Xrm.Page.getAttribute(name)) {
-        var val = window.parent.Xrm.Page.getAttribute(name).getValue();
-        if (val != null) {
-          if (get_type(val) == "[object Array]") {
-            return val[0].name;
+          console.log(stateOrProvince);
+          console.log(city);
+          console.log(line1);
+          console.log(line2);
+
+          if (stateOrProvince && city) {
+            addressConstruct = stateOrProvince + " " + city;
+            if (line1) {
+              addressConstruct += " " + line1;
+            } else if (line2) {
+              addressConstruct += " " + line2;
+            }
+          } else {
+            noParams();
           }
-          return val;
         }
       }
-    }
 
-    function noParams() {
-      var message = "필수 주소 정보가 없습니다.";
-      console.log(message);
-    }
-  </script>
-</head>
-<body>
-  <div id="map"></div>
-</body>
+      function get_type(thing) {
+        if (thing === null) return "[object Null]";
+        return Object.prototype.toString.call(thing);
+      }
+
+      function getXrmAttribute(name) {
+        if (window.parent.Xrm.Page.getAttribute(name)) {
+          var val = window.parent.Xrm.Page.getAttribute(name).getValue();
+
+          if (val != null) {
+            if (get_type(val) == "[object Array]") {
+              return val[0].name;
+            }
+
+            return val;
+          }
+        }
+      }
+
+      function noParams() {
+        var message = "필수 주소 정보가 없습니다.";
+        console.log(message);
+      }
+    </script>
+  </head>
+  <body>
+    <div id="map"></div>
+  </body>
 </html>
